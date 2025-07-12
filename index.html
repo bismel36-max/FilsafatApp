@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <title>Pembukuan Filsafat Coffee</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Gunakan versi 1.x Supabase agar createClient langsung bisa dipakai -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.6/dist/umd/supabase.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
   <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
@@ -22,9 +23,8 @@
   </div>
 
   <script>
-    // Ganti sesuai API key dan info kamu
     const SUPABASE_URL = 'https://luzczgbpqjckiktfrvmb.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1emN6Z2JwcWpja2lrdGZydm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzNDQ0ODYsImV4cCI6MjA2NzkyMDQ4Nn0.Qaqd7ROFfJPV_WmQGqUC8MMwxJCZE0676Leb26VtIqw';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1emN6Z2JwcWpja2lrdGZydm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzNDQ0ODYsImV4cCI6MjA2NzkyMDQ4Nn0.Qaqd7ROFfJPV_WmQGqUC8MMwxJCZE0676Leb26VtIqw'; // ganti dengan anon public API key
     const TELEGRAM_BOT_TOKEN = '7834950819:AAEs7uJr-4wVfEwh-ktTPh59nZ0p-gCOoNw';
     const TELEGRAM_CHAT_ID = '-1002705269492';
     const NAMA_USAHA = 'Filsafat Coffee';
@@ -57,6 +57,7 @@
       e.preventDefault();
       statusText.textContent = '⏳ Mengirim data...';
 
+      // Validasi input
       if (!tanggal.value) {
         statusText.textContent = '⚠️ Harap isi tanggal!';
         return;
@@ -66,7 +67,7 @@
         return;
       }
 
-      // Hitung ulang cash sebelum submit
+      // Hitung cash lagi sebelum submit
       const t = parseInt(total.value) || 0;
       const q = parseInt(qris.value) || 0;
       const g = parseInt(gofood.value) || 0;
@@ -83,14 +84,14 @@
         cash: c >= 0 ? c : 0,
       };
 
-      // Simpan ke Supabase
+      // Kirim ke Supabase
       const { error } = await supabase.from('pendapatan').insert([data]);
       if (error) {
         statusText.textContent = '❌ Gagal menyimpan data: ' + error.message;
         return;
       }
 
-      // Kirim pesan ke Telegram
+      // Kirim ke Telegram
       const pesan = `📋 Pendapatan Masuk - ${NAMA_USAHA}\nTanggal: ${data.tanggal}\nTotal: Rp ${data.total.toLocaleString('id-ID')}\nQris: Rp ${data.qris.toLocaleString('id-ID')}\nGofood: Rp ${data.gofood.toLocaleString('id-ID')}\nQPapi: Rp ${data.qpapi.toLocaleString('id-ID')}\nCash: Rp ${data.cash.toLocaleString('id-ID')}`;
 
       try {
