@@ -22,8 +22,9 @@
   </div>
 
   <script>
+    // Ganti sesuai API key dan info kamu
     const SUPABASE_URL = 'https://luzczgbpqjckiktfrvmb.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1emN6Z2JwcWpja2lrdGZydm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzNDQ0ODYsImV4cCI6MjA2NzkyMDQ4Nn0.Qaqd7ROFfJPV_WmQGqUC8MMwxJCZE0676Leb26VtIqw';
+    const SUPABASE_KEY = 'https://luzczgbpqjckiktfrvmb.supabase.co';
     const TELEGRAM_BOT_TOKEN = '7834950819:AAEs7uJr-4wVfEwh-ktTPh59nZ0p-gCOoNw';
     const TELEGRAM_CHAT_ID = '-1002705269492';
     const NAMA_USAHA = 'Filsafat Coffee';
@@ -54,15 +55,14 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      statusText.textContent = '? Mengirim data...';
+      statusText.textContent = '⏳ Mengirim data...';
 
-      // Validasi
       if (!tanggal.value) {
-        statusText.textContent = '?? Harap isi tanggal!';
+        statusText.textContent = '⚠️ Harap isi tanggal!';
         return;
       }
       if (!total.value || total.value <= 0) {
-        statusText.textContent = '?? Harap isi Pendapatan Total dengan benar!';
+        statusText.textContent = '⚠️ Harap isi Pendapatan Total dengan benar!';
         return;
       }
 
@@ -86,12 +86,12 @@
       // Simpan ke Supabase
       const { error } = await supabase.from('pendapatan').insert([data]);
       if (error) {
-        statusText.textContent = '? Gagal menyimpan data: ' + error.message;
+        statusText.textContent = '❌ Gagal menyimpan data: ' + error.message;
         return;
       }
 
-      // Kirim pesan Telegram
-      const pesan = `?? Pendapatan Masuk - ${NAMA_USAHA}\nTanggal: ${data.tanggal}\nTotal: Rp ${data.total.toLocaleString('id-ID')}\nQris: Rp ${data.qris.toLocaleString('id-ID')}\nGofood: Rp ${data.gofood.toLocaleString('id-ID')}\nQPapi: Rp ${data.qpapi.toLocaleString('id-ID')}\nCash: Rp ${data.cash.toLocaleString('id-ID')}`;
+      // Kirim pesan ke Telegram
+      const pesan = `📋 Pendapatan Masuk - ${NAMA_USAHA}\nTanggal: ${data.tanggal}\nTotal: Rp ${data.total.toLocaleString('id-ID')}\nQris: Rp ${data.qris.toLocaleString('id-ID')}\nGofood: Rp ${data.gofood.toLocaleString('id-ID')}\nQPapi: Rp ${data.qpapi.toLocaleString('id-ID')}\nCash: Rp ${data.cash.toLocaleString('id-ID')}`;
 
       try {
         await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -103,7 +103,7 @@
         console.warn('Gagal kirim ke Telegram:', err);
       }
 
-      statusText.textContent = '? Data berhasil dikirim!';
+      statusText.textContent = '✅ Data berhasil dikirim!';
       form.reset();
       cash.value = '';
     });
