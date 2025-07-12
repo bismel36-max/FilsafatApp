@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pembukuan Filsafat Coffee</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-6 text-center">Input Pendapatan</h1>
+    <form id="formPendapatan" class="space-y-4">
+      <input type="date" id="tanggal" class="w-full p-2 border rounded" required />
+      <input type="number" id="total" placeholder="Pendapatan Total" class="w-full p-2 border rounded" required />
+      <input type="number" id="qris" placeholder="Qris" class="w-full p-2 border rounded" />
+      <input type="number" id="gofood" placeholder="Gofood" class="w-full p-2 border rounded" />
+      <input type="number" id="qpapi" placeholder="QPapi" class="w-full p-2 border rounded" />
+      <input type="number" id="cash" placeholder="Cash (otomatis)" class="w-full p-2 border rounded bg-gray-100" readonly />
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white w-full py-2 rounded">Kirim</button>
+    </form>
+    <p id="status" class="mt-4 text-sm text-center"></p>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://luzczgbpqjckiktfrvmb.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1emN6Z2JwcWpja2lrdGZydm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzNDQ0ODYsImV4cCI6MjA2NzkyMDQ4Nn0.Qaqd7ROFfJPV_WmQGqUC8MMwxJCZE0676Leb26VtIqw';
+    const TELEGRAM_BOT_TOKEN = '7834950819:AAEs7uJr-4wVfEwh-ktTPh59nZ0p-gCOoNw';
+    const TELEGRAM_CHAT_ID = '-1002705269492';
+    const NAMA_USAHA = 'Filsafat Coffee';
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const form = document.getElementById('formPendapatan');
+    const tanggal = document.getElementById('tanggal');
+    const total = document.getElementById('total');
+    const qris = document.getElementById('qris');
+    const gofood = document.getElementById('gofood');
+    const qpapi = document.getElementById('qpapi');
+    const cash = document.getElementById('cash');
+    const statusText = document.getElementById('status');
+
+    function hitungCash() {
+      const t = parseInt(total.value) || 0;
+      const q = parseInt(qris.value) || 0;
+      const g = parseInt(gofood.value) || 0;
+      const p = parseInt(qpapi.value) || 0;
+      const c = t - q - g - p;
+      cash.value = c >= 0 ? c : 0;
+    }
+
+    [total, qris, gofood, qpapi].forEach(input => {
+      input.addEventListener('input', hitungCash);
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusText.textContent = '? Mengirim data...';
+
+      // Validasi
+      if (!tanggal.value) {
+        statusText.textContent = '?? Harap isi tanggal!';
+        return;
+      }
+      if (!total.value || total.value <= 0) {
+        statusText.textContent = '?? Harap isi Pendapatan Total dengan benar!';
+        return;
+      }
+
+      // Hitung ulang cash sebelum submit
+      const t = parseInt(total.value) || 0;
+      const q = parseInt(qris.value) || 0;
+      const g = parseInt(gofood.value) || 0;
+      const p = parseInt(qpapi.value) || 0;
+      const c = t - q - g - p;
+      cash.value = c >= 0 ? c : 0;
+
+      const data = {
+        tanggal: tanggal.value,
+        total: t,
+        qris: q,
+        gofood: g,
+        qpapi: p,
+        cash: c >= 0 ? c : 0,
+      };
+
+      // Simpan ke Supabase
+      const { error } = await supabase.from('pendapatan').insert([data]);
+      if (error) {
+        statusText.textContent = '? Gagal menyimpan data: ' + error.message;
+        return;
+      }
+
+      // Kirim pesan Telegram
+      const pesan = `?? Pendapatan Masuk - ${NAMA_USAHA}\nTanggal: ${data.tanggal}\nTotal: Rp ${data.total.toLocaleString('id-ID')}\nQris: Rp ${data.qris.toLocaleString('id-ID')}\nGofood: Rp ${data.gofood.toLocaleString('id-ID')}\nQPapi: Rp ${data.qpapi.toLocaleString('id-ID')}\nCash: Rp ${data.cash.toLocaleString('id-ID')}`;
+
+      try {
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: pesan })
+        });
+      } catch (err) {
+        console.warn('Gagal kirim ke Telegram:', err);
+      }
+
+      statusText.textContent = '? Data berhasil dikirim!';
+      form.reset();
+      cash.value = '';
+    });
+  </script>
+</body>
+</html>
